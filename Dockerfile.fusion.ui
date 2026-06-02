@@ -8,7 +8,7 @@
 FROM node:20.14.0-bookworm-slim AS ui-builder
 
 # Install git to clone CVAT source
-RUN apt-get update && apt-get install -y git && npm install -g yarn
+RUN apt-get update && apt-get install -y git
 
 WORKDIR /app
 
