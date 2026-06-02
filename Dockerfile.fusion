@@ -17,17 +17,17 @@ RUN /opt/venv/bin/python3 -m ensurepip --upgrade && \
         "scipy>=1.11"
 
 # Copy our lidar_fusion Django app
-COPY cvat/apps/lidar_fusion /home/django/cvat/cvat/apps/lidar_fusion
+COPY cvat/apps/lidar_fusion /home/django/cvat/apps/lidar_fusion
 
 # Copy updated settings (adds lidar_fusion to INSTALLED_APPS)
-COPY cvat/settings/base.py /home/django/cvat/cvat/settings/base.py
+COPY cvat/settings/base.py /home/django/cvat/settings/base.py
 
 # Copy updated URL routing
-COPY cvat/urls.py /home/django/cvat/cvat/urls.py
+COPY cvat/urls.py /home/django/cvat/urls.py
 
 # Fix ownership
-RUN chown -R django:django /home/django/cvat/cvat/apps/lidar_fusion \
-    && chown django:django /home/django/cvat/cvat/settings/base.py \
-    && chown django:django /home/django/cvat/cvat/urls.py
+RUN chown -R django:django /home/django/cvat/apps/lidar_fusion \
+    && chown django:django /home/django/cvat/settings/base.py \
+    && chown django:django /home/django/cvat/urls.py
 
 USER django
