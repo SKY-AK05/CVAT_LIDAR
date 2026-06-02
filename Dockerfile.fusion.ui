@@ -1,0 +1,18 @@
+# LiDAR-Camera Fusion CVAT UI Image
+# Extends the official CVAT UI image with our lidar-fusion React components
+#
+# Usage:
+#   docker build -t cvat_fusion_ui:latest -f Dockerfile.fusion.ui .
+
+FROM cvat/ui:dev
+
+USER root
+
+# Copy our lidar-fusion React components
+COPY cvat-ui/src/components/lidar-fusion /usr/share/nginx/html/src/components/lidar-fusion
+
+# Copy modified 3D workspace
+COPY cvat-ui/src/components/annotation-page/standard3D-workspace/standard3D-workspace.tsx \
+     /usr/share/nginx/html/src/components/annotation-page/standard3D-workspace/standard3D-workspace.tsx
+
+USER nginx

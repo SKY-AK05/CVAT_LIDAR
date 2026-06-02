@@ -1,0 +1,281 @@
+name: cvat_fusion
+
+# LiDAR-Camera Fusion — Separate CVAT instance
+# Runs on port 8091 (existing CVAT uses 8080)
+#
+# Usage:
+#   docker compose -f docker-compose.fusion.yml up -d
+#   docker compose -f docker-compose.fusion.yml exec cvat_server python manage.py migrate lidar_fusion
+#   docker compose -f docker-compose.fusion.yml exec cvat_server python manage.py createsuperuser
+
+x-backend-env: &backend-env
+  CVAT_POSTGRES_HOST: cvat_fusion_db
+  CVAT_REDIS_INMEM_HOST: cvat_fusion_redis_inmem
+  CVAT_REDIS_INMEM_PORT: 6379
+  CVAT_REDIS_ONDISK_HOST: cvat_fusion_redis_ondisk
+  CVAT_REDIS_ONDISK_PORT: 6666
+  CVAT_LOG_IMPORT_ERRORS: 'true'
+  DJANGO_LOG_SERVER_HOST: cvat_fusion_vector
+  DJANGO_LOG_SERVER_PORT: 8282
+  no_proxy: clickhouse,cvat_fusion_vector,nuclio,opa
+  SMOKESCREEN_OPTS: ""
+
+x-backend-deps: &backend-deps
+  cvat_fusion_redis_inmem:
+    condition: service_started
+  cvat_fusion_redis_ondisk:
+    condition: service_started
+  cvat_fusion_db:
+    condition: service_started
+  cvat_fusion_clickhouse:
+    condition: service_started
+
+services:
+
+  # ── Database ──────────────────────────────────────────────────────────────
+  cvat_fusion_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_DB: cvat_fusion
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - cvat_fusion_db:/var/lib/postgresql/data
+    networks:
+      - cvat_fusion
+
+  # ── Redis in-memory ───────────────────────────────────────────────────────
+  cvat_fusion_redis_inmem:
+    image: redis:7.2.11-alpine
+    restart: always
+    networks:
+      - cvat_fusion
+
+  # ── Redis on-disk (Kvrocks) ───────────────────────────────────────────────
+  cvat_fusion_redis_ondisk:
+    image: apache/kvrocks:2.15.0
+    restart: always
+    volumes:
+      - cvat_fusion_redis_ondisk:/var/lib/kvrocks/data
+    networks:
+      - cvat_fusion
+
+  # ── ClickHouse ────────────────────────────────────────────────────────────
+  cvat_fusion_clickhouse:
+    image: clickhouse/clickhouse-server:23.11-alpine
+    restart: always
+    environment:
+      CLICKHOUSE_DB: cvat
+      CLICKHOUSE_USER: user
+      CLICKHOUSE_PASSWORD: user
+    volumes:
+      - cvat_fusion_clickhouse:/var/lib/clickhouse
+    networks:
+      - cvat_fusion
+
+  # ── OPA ───────────────────────────────────────────────────────────────────
+  cvat_fusion_opa:
+    image: openpolicyagent/opa:1.12.2
+    restart: always
+    command: run --server --addr=0.0.0.0:8181
+    networks:
+      - cvat_fusion
+
+  # ── Vector log collector ──────────────────────────────────────────────────
+  cvat_fusion_vector:
+    image: timberio/vector:0.26.0-alpine
+    restart: always
+    depends_on:
+      - cvat_fusion_clickhouse
+    networks:
+      - cvat_fusion
+
+  # ── CVAT Server (with LiDAR fusion) ──────────────────────────────────────
+  cvat_fusion_server:
+    image: cvat_fusion_server:latest
+    restart: always
+    depends_on:
+      <<: *backend-deps
+      cvat_fusion_opa:
+        condition: service_started
+    environment:
+      <<: *backend-env
+      CVAT_POSTGRES_DBNAME: cvat_fusion
+      IAM_OPA_BUNDLE: '1'
+      CVAT_OPA_URL: http://cvat_fusion_opa:8181
+    volumes:
+      - cvat_fusion_data:/home/django/data
+      - cvat_fusion_keys:/home/django/keys
+      - cvat_fusion_logs:/home/django/logs
+    networks:
+      - cvat_fusion
+    command: ./backend_entrypoint.sh
+
+  # ── Workers ───────────────────────────────────────────────────────────────
+  cvat_fusion_worker_import:
+    image: cvat_fusion_server:latest
+    restart: always
+    depends_on:
+      <<: *backend-deps
+    environment:
+      <<: *backend-env
+      CVAT_POSTGRES_DBNAME: cvat_fusion
+    volumes:
+      - cvat_fusion_data:/home/django/data
+      - cvat_fusion_keys:/home/django/keys
+      - cvat_fusion_logs:/home/django/logs
+    networks:
+      - cvat_fusion
+    command: python manage.py rqworker import
+
+  cvat_fusion_worker_export:
+    image: cvat_fusion_server:latest
+    restart: always
+    depends_on:
+      <<: *backend-deps
+    environment:
+      <<: *backend-env
+      CVAT_POSTGRES_DBNAME: cvat_fusion
+    volumes:
+      - cvat_fusion_data:/home/django/data
+      - cvat_fusion_keys:/home/django/keys
+      - cvat_fusion_logs:/home/django/logs
+    networks:
+      - cvat_fusion
+    command: python manage.py rqworker export
+
+  cvat_fusion_worker_annotation:
+    image: cvat_fusion_server:latest
+    restart: always
+    depends_on:
+      <<: *backend-deps
+    environment:
+      <<: *backend-env
+      CVAT_POSTGRES_DBNAME: cvat_fusion
+    volumes:
+      - cvat_fusion_data:/home/django/data
+      - cvat_fusion_keys:/home/django/keys
+      - cvat_fusion_logs:/home/django/logs
+    networks:
+      - cvat_fusion
+    command: python manage.py rqworker annotation
+
+  cvat_fusion_worker_utils:
+    image: cvat_fusion_server:latest
+    restart: always
+    depends_on:
+      <<: *backend-deps
+    environment:
+      <<: *backend-env
+      CVAT_POSTGRES_DBNAME: cvat_fusion
+    volumes:
+      - cvat_fusion_data:/home/django/data
+      - cvat_fusion_keys:/home/django/keys
+      - cvat_fusion_logs:/home/django/logs
+    networks:
+      - cvat_fusion
+    command: python manage.py rqworker utils
+
+  cvat_fusion_worker_chunks:
+    image: cvat_fusion_server:latest
+    restart: always
+    depends_on:
+      <<: *backend-deps
+    environment:
+      <<: *backend-env
+      CVAT_POSTGRES_DBNAME: cvat_fusion
+    volumes:
+      - cvat_fusion_data:/home/django/data
+      - cvat_fusion_keys:/home/django/keys
+      - cvat_fusion_logs:/home/django/logs
+    networks:
+      - cvat_fusion
+    command: python manage.py rqworker chunks
+
+  cvat_fusion_worker_webhooks:
+    image: cvat_fusion_server:latest
+    restart: always
+    depends_on:
+      <<: *backend-deps
+    environment:
+      <<: *backend-env
+      CVAT_POSTGRES_DBNAME: cvat_fusion
+    volumes:
+      - cvat_fusion_data:/home/django/data
+      - cvat_fusion_keys:/home/django/keys
+      - cvat_fusion_logs:/home/django/logs
+    networks:
+      - cvat_fusion
+    command: python manage.py rqworker webhooks
+
+  cvat_fusion_worker_quality:
+    image: cvat_fusion_server:latest
+    restart: always
+    depends_on:
+      <<: *backend-deps
+    environment:
+      <<: *backend-env
+      CVAT_POSTGRES_DBNAME: cvat_fusion
+    volumes:
+      - cvat_fusion_data:/home/django/data
+      - cvat_fusion_keys:/home/django/keys
+      - cvat_fusion_logs:/home/django/logs
+    networks:
+      - cvat_fusion
+    command: python manage.py rqworker quality_reports
+
+  cvat_fusion_worker_consensus:
+    image: cvat_fusion_server:latest
+    restart: always
+    depends_on:
+      <<: *backend-deps
+    environment:
+      <<: *backend-env
+      CVAT_POSTGRES_DBNAME: cvat_fusion
+    volumes:
+      - cvat_fusion_data:/home/django/data
+      - cvat_fusion_keys:/home/django/keys
+      - cvat_fusion_logs:/home/django/logs
+    networks:
+      - cvat_fusion
+    command: python manage.py rqworker consensus
+
+  # ── UI ────────────────────────────────────────────────────────────────────
+  cvat_fusion_ui:
+    image: cvat_fusion_ui:latest
+    restart: always
+    networks:
+      - cvat_fusion
+
+  # ── Traefik reverse proxy ─────────────────────────────────────────────────
+  cvat_fusion_traefik:
+    image: traefik:v3.6
+    restart: always
+    environment:
+      TRAEFIK_ENTRYPOINTS_web_ADDRESS: :80
+      TRAEFIK_PROVIDERS_DOCKER: 'true'
+      TRAEFIK_PROVIDERS_DOCKER_NETWORK: cvat_fusion
+      TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT: 'false'
+      TRAEFIK_LOG: 'true'
+    labels:
+      traefik.enable: 'true'
+      traefik.http.routers.traefik.entrypoints: web
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "8091:80"
+    networks:
+      - cvat_fusion
+
+volumes:
+  cvat_fusion_db:
+  cvat_fusion_redis_ondisk:
+  cvat_fusion_clickhouse:
+  cvat_fusion_data:
+  cvat_fusion_keys:
+  cvat_fusion_logs:
+
+networks:
+  cvat_fusion:
+    driver: bridge
