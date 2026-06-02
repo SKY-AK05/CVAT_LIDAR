@@ -8,8 +8,10 @@ FROM cvat/server:dev
 
 USER root
 
-# cvat/server:dev uses virtualenv at /opt/venv with Python 3.12
-RUN /opt/venv/bin/python3 -m pip install --no-cache-dir \
+# pip is stripped from the venv in cvat/server:dev
+# Bootstrap pip using ensurepip then install our deps
+RUN /opt/venv/bin/python3 -m ensurepip --upgrade && \
+    /opt/venv/bin/python3 -m pip install --no-cache-dir \
         "numpy>=1.24" \
         "opencv-python-headless>=4.8" \
         "scipy>=1.11"
