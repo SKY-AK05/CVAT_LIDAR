@@ -110,7 +110,7 @@ services:
       - cvat_fusion_logs:/home/django/logs
     networks:
       - cvat_fusion
-    command: ./backend_entrypoint.sh
+    command: run server
 
   # ── Workers ───────────────────────────────────────────────────────────────
   cvat_fusion_worker_import:
@@ -127,7 +127,7 @@ services:
       - cvat_fusion_logs:/home/django/logs
     networks:
       - cvat_fusion
-    command: python manage.py rqworker import
+    command: run worker import
 
   cvat_fusion_worker_export:
     image: cvat_fusion_server:latest
@@ -143,7 +143,7 @@ services:
       - cvat_fusion_logs:/home/django/logs
     networks:
       - cvat_fusion
-    command: python manage.py rqworker export
+    command: run worker export
 
   cvat_fusion_worker_annotation:
     image: cvat_fusion_server:latest
@@ -159,7 +159,7 @@ services:
       - cvat_fusion_logs:/home/django/logs
     networks:
       - cvat_fusion
-    command: python manage.py rqworker annotation
+    command: run worker annotation
 
   cvat_fusion_worker_utils:
     image: cvat_fusion_server:latest
@@ -175,7 +175,7 @@ services:
       - cvat_fusion_logs:/home/django/logs
     networks:
       - cvat_fusion
-    command: python manage.py rqworker utils
+    command: run worker utils
 
   cvat_fusion_worker_chunks:
     image: cvat_fusion_server:latest
@@ -191,7 +191,7 @@ services:
       - cvat_fusion_logs:/home/django/logs
     networks:
       - cvat_fusion
-    command: python manage.py rqworker chunks
+    command: run worker chunks
 
   cvat_fusion_worker_webhooks:
     image: cvat_fusion_server:latest
@@ -207,7 +207,7 @@ services:
       - cvat_fusion_logs:/home/django/logs
     networks:
       - cvat_fusion
-    command: python manage.py rqworker webhooks
+    command: run worker webhooks
 
   cvat_fusion_worker_quality:
     image: cvat_fusion_server:latest
@@ -223,7 +223,7 @@ services:
       - cvat_fusion_logs:/home/django/logs
     networks:
       - cvat_fusion
-    command: python manage.py rqworker quality_reports
+    command: run worker quality_reports
 
   cvat_fusion_worker_consensus:
     image: cvat_fusion_server:latest
@@ -239,7 +239,7 @@ services:
       - cvat_fusion_logs:/home/django/logs
     networks:
       - cvat_fusion
-    command: python manage.py rqworker consensus
+    command: run worker consensus
 
   # ── UI ────────────────────────────────────────────────────────────────────
   cvat_fusion_ui:
