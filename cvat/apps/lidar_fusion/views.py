@@ -68,6 +68,7 @@ class CameraCalibrationViewSet(
 
     permission_classes = [IsAuthenticated]
     serializer_class = CameraCalibrationSerializer
+    iam_supports_organization_params = False
 
     # ------------------------------------------------------------------
     # Helpers
