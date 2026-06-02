@@ -25,9 +25,8 @@ RUN corepack enable
 # Install ALL monorepo dependencies using Yarn 4
 RUN yarn install --frozen-lockfile
 
-# Build the CVAT UI (Compiles the Typescript into raw Javascript in the 'dist' folder)
-WORKDIR /app/cvat-ui
-RUN yarn build
+# Build the CVAT UI from the monorepo root using the workspace command
+RUN yarn workspace cvat-ui build
 
 # Stage 2: Serve the compiled UI using the official CVAT Nginx configuration
 FROM cvat/ui:dev
