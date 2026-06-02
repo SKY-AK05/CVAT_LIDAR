@@ -249,7 +249,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.cvat-fusion-ui.rule=PathPrefix(`/`)"
       - "traefik.http.routers.cvat-fusion-ui.entrypoints=web"
-      - "traefik.http.services.cvat-fusion-ui.loadbalancer.server.port=80"
+      - "traefik.http.services.cvat-fusion-ui.loadbalancer.server.port=8000"
 
   # ── Traefik ───────────────────────────────────────────────────────────────
   cvat_fusion_traefik:
