@@ -8,11 +8,11 @@ FROM cvat/server:dev
 
 USER root
 
-# Override entrypoint to use shell directly for build steps
-# Find python3 and install our dependencies
-RUN bash -c "python3 -m pip install --no-cache-dir 'numpy>=1.24' 'opencv-python-headless>=4.8' 'scipy>=1.11' 2>/dev/null || \
-    /usr/bin/python3 -m pip install --no-cache-dir 'numpy>=1.24' 'opencv-python-headless>=4.8' 'scipy>=1.11' 2>/dev/null || \
-    $(find / -name 'python3' -not -path '*/proc/*' 2>/dev/null | head -1) -m pip install --no-cache-dir 'numpy>=1.24' 'opencv-python-headless>=4.8' 'scipy>=1.11'"
+# cvat/server:dev uses virtualenv at /opt/venv with Python 3.12
+RUN /opt/venv/bin/python3 -m pip install --no-cache-dir \
+        "numpy>=1.24" \
+        "opencv-python-headless>=4.8" \
+        "scipy>=1.11"
 
 # Copy our lidar_fusion Django app
 COPY cvat/apps/lidar_fusion /home/django/cvat/cvat/apps/lidar_fusion
