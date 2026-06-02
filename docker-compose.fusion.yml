@@ -112,6 +112,11 @@ services:
       - cvat_fusion
     # CORRECT command for backend_entrypoint.sh
     command: run server
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.cvat-fusion-server.loadbalancer.server.port=8080"
+      - "traefik.http.routers.cvat-fusion-server.rule=PathPrefix(`/api/`) || PathPrefix(`/static/`) || PathPrefix(`/admin`) || PathPrefix(`/django-rq`)"
+      - "traefik.http.routers.cvat-fusion-server.entrypoints=web"
 
   # ── Workers ───────────────────────────────────────────────────────────────
   cvat_fusion_worker_import:
