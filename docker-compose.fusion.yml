@@ -274,7 +274,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
-      - "8091:80"
+      - "8080:80"
     networks:
       - cvat_fusion
 
