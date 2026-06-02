@@ -19,7 +19,10 @@ RUN git clone -b develop --depth 1 https://github.com/cvat-ai/cvat.git .
 COPY cvat-ui/src/components/lidar-fusion ./cvat-ui/src/components/lidar-fusion
 COPY cvat-ui/src/components/annotation-page/standard3D-workspace/standard3D-workspace.tsx ./cvat-ui/src/components/annotation-page/standard3D-workspace/standard3D-workspace.tsx
 
-# Install ALL monorepo dependencies using Yarn (CVAT uses yarn, not npm)
+# Enable Corepack so that Yarn 4 (Berry) is used, as required by CVAT
+RUN corepack enable
+
+# Install ALL monorepo dependencies using Yarn 4
 RUN yarn install --frozen-lockfile
 
 # Build the CVAT UI (Compiles the Typescript into raw Javascript in the 'dist' folder)
