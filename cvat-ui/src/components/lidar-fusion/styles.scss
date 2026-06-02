@@ -1,0 +1,189 @@
+// Copyright (C) CVAT.ai Corporation
+// SPDX-License-Identifier: MIT
+
+// LiDAR-Camera Fusion workspace styles
+// All classes are namespaced under .cvat-lidar-fusion-* to avoid conflicts
+// with existing CVAT styles.
+
+.cvat-lidar-fusion-workspace {
+    background: #0d0d1a;
+    color: #ddd;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 13px;
+    min-height: 200px;
+    box-sizing: border-box;
+
+    * {
+        box-sizing: border-box;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Toolbar
+// ---------------------------------------------------------------------------
+
+.cvat-lidar-fusion-toolbar {
+    // Base styles applied inline; SCSS adds responsive tweaks
+
+    .ant-slider {
+        margin: 2px 0;
+    }
+
+    .ant-slider-rail {
+        background: #444;
+    }
+
+    .ant-slider-track {
+        background: #1890ff;
+    }
+
+    .ant-checkbox-wrapper {
+        color: #ccc;
+        font-size: 11px;
+    }
+
+    .ant-switch-small {
+        min-width: 28px;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Multi-camera layout
+// ---------------------------------------------------------------------------
+
+.cvat-lidar-fusion-multi-camera-layout {
+    // Smooth transitions when cameras appear/disappear
+    > div {
+        transition: gap 0.15s ease;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Camera panel
+// ---------------------------------------------------------------------------
+
+.cvat-lidar-fusion-camera-panel {
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    cursor: default;
+
+    &:hover {
+        border-color: #1890ff !important;
+        box-shadow: 0 0 8px rgba(24, 144, 255, 0.3);
+    }
+
+    // Camera name label
+    .ant-tag {
+        pointer-events: none;
+        font-size: 10px;
+        line-height: 1.4;
+    }
+
+    // Fullscreen toggle button
+    button {
+        &:hover {
+            background: rgba(255, 255, 255, 0.15) !important;
+            color: #fff !important;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Calibration manager
+// ---------------------------------------------------------------------------
+
+.cvat-lidar-fusion-calibration-manager {
+    // Card styles
+    .ant-card {
+        background: #1a1a2e;
+        border-color: #333;
+        border-radius: 6px;
+
+        .ant-card-head {
+            background: #151525;
+            border-bottom-color: #333;
+            min-height: 36px;
+            padding: 0 12px;
+
+            .ant-card-head-title {
+                font-size: 12px;
+                color: #ccc;
+                padding: 8px 0;
+            }
+        }
+
+        .ant-card-body {
+            padding: 10px 12px;
+            color: #aaa;
+            font-size: 12px;
+        }
+    }
+
+    // Descriptions table
+    .ant-descriptions-item-label {
+        color: #888;
+        font-size: 11px;
+    }
+
+    .ant-descriptions-item-content {
+        color: #ccc;
+        font-size: 11px;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Modal overrides for dark theme
+// ---------------------------------------------------------------------------
+
+.ant-modal-content {
+    // Only applies when inside the fusion workspace
+    .cvat-lidar-fusion-workspace & {
+        background: #1a1a2e;
+        color: #ddd;
+
+        .ant-modal-header {
+            background: #151525;
+            border-bottom-color: #333;
+        }
+
+        .ant-modal-title {
+            color: #eee;
+        }
+
+        .ant-form-item-label > label {
+            color: #bbb;
+        }
+
+        .ant-input,
+        .ant-input-affix-wrapper,
+        textarea.ant-input {
+            background: #0d0d1a;
+            border-color: #444;
+            color: #ddd;
+
+            &:focus,
+            &:hover {
+                border-color: #1890ff;
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Responsive adjustments
+// ---------------------------------------------------------------------------
+
+@media (max-width: 900px) {
+    .cvat-lidar-fusion-multi-camera-layout {
+        // Stack all cameras vertically on narrow screens
+        > div {
+            flex-direction: column !important;
+            align-items: center;
+        }
+    }
+
+    .cvat-lidar-fusion-toolbar {
+        > * {
+            flex: 1 1 auto;
+        }
+    }
+}
