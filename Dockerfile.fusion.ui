@@ -4,15 +4,40 @@
 # Usage:
 #   docker build -t cvat_fusion_ui:latest -f Dockerfile.fusion.ui .
 
+# Stage 1: Compile the Typescript UI from source
+FROM node:20.14.0-bookworm-slim AS ui-builder
+
+# Install git to clone CVAT source
+RUN apt-get update && apt-get install -y git
+
+WORKDIR /app
+
+# Clone the CVAT source code (develop branch)
+RUN git clone -b develop --depth 1 https://github.com/cvat-ai/cvat.git .
+
+# Copy our custom lidar-fusion Typescript components over the official ones
+COPY cvat-ui/src/components/lidar-fusion ./cvat-ui/src/components/lidar-fusion
+COPY cvat-ui/src/components/annotation-page/standard3D-workspace/standard3D-workspace.tsx ./cvat-ui/src/components/annotation-page/standard3D-workspace/standard3D-workspace.tsx
+
+# Install ALL monorepo dependencies (required before building UI)
+RUN npm ci
+
+# Build the CVAT UI (Compiles the Typescript into raw Javascript in the 'dist' folder)
+WORKDIR /app/cvat-ui
+RUN npm run build
+
+# Stage 2: Serve the compiled UI using the official CVAT Nginx configuration
 FROM cvat/ui:dev
 
 USER root
 
-# Copy our lidar-fusion React components
-COPY cvat-ui/src/components/lidar-fusion /usr/share/nginx/html/src/components/lidar-fusion
+# Delete the default official compiled Javascript files
+RUN rm -rf /usr/share/nginx/html/*
 
-# Copy modified 3D workspace
-COPY cvat-ui/src/components/annotation-page/standard3D-workspace/standard3D-workspace.tsx \
-     /usr/share/nginx/html/src/components/annotation-page/standard3D-workspace/standard3D-workspace.tsx
+# Copy our newly compiled Javascript files from Stage 1
+COPY --from=ui-builder /app/cvat-ui/dist /usr/share/nginx/html/
+
+# Fix permissions
+RUN chown -R nginx:nginx /usr/share/nginx/html/
 
 USER nginx
