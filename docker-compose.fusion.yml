@@ -111,7 +111,7 @@ services:
     networks:
       - cvat_fusion
     # CORRECT command for backend_entrypoint.sh
-    command: run server
+    command: init run server nginx
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.cvat-fusion-server.loadbalancer.server.port=8080"
