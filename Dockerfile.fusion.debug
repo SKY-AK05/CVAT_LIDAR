@@ -1,0 +1,6 @@
+# Debug image — just to find python path inside cvat/server:dev
+FROM cvat/server:dev
+USER root
+RUN find / -name "python*" -type f 2>/dev/null | grep -v proc | head -20
+RUN find / -name "pip*" -type f 2>/dev/null | grep -v proc | head -20
+RUN cat /etc/os-release
