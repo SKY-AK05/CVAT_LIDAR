@@ -8,7 +8,7 @@
 FROM node:20.14.0-bookworm-slim AS ui-builder
 
 # Install git to clone CVAT source
-RUN apt-get update && apt-get install -y git
+RUN apt-get update && apt-get install -y git && npm install -g yarn
 
 WORKDIR /app
 
@@ -19,12 +19,12 @@ RUN git clone -b develop --depth 1 https://github.com/cvat-ai/cvat.git .
 COPY cvat-ui/src/components/lidar-fusion ./cvat-ui/src/components/lidar-fusion
 COPY cvat-ui/src/components/annotation-page/standard3D-workspace/standard3D-workspace.tsx ./cvat-ui/src/components/annotation-page/standard3D-workspace/standard3D-workspace.tsx
 
-# Install ALL monorepo dependencies (required before building UI)
-RUN npm ci
+# Install ALL monorepo dependencies using Yarn (CVAT uses yarn, not npm)
+RUN yarn install --frozen-lockfile
 
 # Build the CVAT UI (Compiles the Typescript into raw Javascript in the 'dist' folder)
 WORKDIR /app/cvat-ui
-RUN npm run build
+RUN yarn build
 
 # Stage 2: Serve the compiled UI using the official CVAT Nginx configuration
 FROM cvat/ui:dev
