@@ -31,6 +31,7 @@ urlpatterns = [
     # even if the base image's engine/urls.py does not include them.
     path("api/", include("cvat.apps.iam.urls")),
     path("api/", include("cvat.apps.organizations.urls")),
+    path("api/", include("cvat.apps.lidar_fusion.urls")),
 ]
 
 if apps.is_installed("cvat.apps.log_viewer"):
