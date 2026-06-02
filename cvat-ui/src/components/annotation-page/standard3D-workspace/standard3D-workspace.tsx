@@ -34,7 +34,7 @@ export default function StandardWorkspace3DComponent(): JSX.Element {
         };
     });
 
-    const showFusionTab = taskId !== null && jobId !== null;
+    const showFusionTab = true;
 
     return (
         <Layout hasSider className='cvat-standard-workspace'>
