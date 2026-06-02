@@ -86,7 +86,16 @@ services:
   cvat_fusion_opa:
     image: openpolicyagent/opa:1.12.2
     restart: always
-    command: run --server --addr=0.0.0.0:8181
+    command:
+      - run
+      - --server
+      - --addr=:8181
+      - --log-level=error
+      - --set=services.cvat.url=http://cvat_fusion_server:8080
+      - --set=bundles.cvat.service=cvat
+      - --set=bundles.cvat.resource=/api/auth/rules
+      - --set=bundles.cvat.polling.min_delay_seconds=5
+      - --set=bundles.cvat.polling.max_delay_seconds=15
     networks:
       - cvat_fusion
 
