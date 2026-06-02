@@ -27,6 +27,10 @@ urlpatterns = [
     path("", include("cvat.apps.engine.urls")),
     path("", include("cvat.apps.redis_handler.urls")),
     path("django-rq/", include("django_rq.urls")),
+    # Ensure IAM (auth) and organizations URLs are always registered,
+    # even if the base image's engine/urls.py does not include them.
+    path("api/", include("cvat.apps.iam.urls")),
+    path("api/", include("cvat.apps.organizations.urls")),
 ]
 
 if apps.is_installed("cvat.apps.log_viewer"):
