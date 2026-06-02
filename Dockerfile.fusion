@@ -8,11 +8,14 @@ FROM cvat/server:dev
 
 USER root
 
-# Install additional Python dependencies for lidar_fusion
-RUN pip install --no-cache-dir \
-    numpy>=1.24 \
-    opencv-python-headless>=4.8 \
-    scipy>=1.11
+# Find the correct pip path and install dependencies
+# cvat/server:dev uses a virtualenv — find and use it
+RUN PYTHON=$(which python3 || which python) && \
+    PIP=$(which pip3 || which pip || $PYTHON -m pip --version > /dev/null 2>&1 && echo "$PYTHON -m pip") && \
+    $PYTHON -m pip install --no-cache-dir \
+        "numpy>=1.24" \
+        "opencv-python-headless>=4.8" \
+        "scipy>=1.11"
 
 # Copy our lidar_fusion Django app
 COPY cvat/apps/lidar_fusion /home/django/cvat/cvat/apps/lidar_fusion
